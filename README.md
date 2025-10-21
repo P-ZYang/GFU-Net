@@ -1,6 +1,6 @@
 # GFU-Net:Coupling Visual Graphs and Frequency Analysis for Infrared Small Target Detection
 
-### Author：
+## Author：
 
 **MEIBIN QI ， YANG ZHANG  ， SHUO ZHUANG  ，YIMIN LIU  ，LIANGLIANG ZHU**
 
@@ -8,7 +8,7 @@ Correspondence:  SHUO ZHUANG
 
 Hefei University of Technology, Hefei 230601, China  
 
-### Data Structure
+## Data Structure
 ```
 ├──./datasets/
 │    ├── IRSTD-1K
@@ -47,6 +47,6 @@ Hefei University of Technology, Hefei 230601, China
 │    │    ├── train.txt
 │    │    ├── test.txt
 ```
-### Thanks
+## Thanks
 
 Our code is based on [SCT](https://github.com/xdFai/SCTransNet). You can refer to their README files and source code for more implementation details.
