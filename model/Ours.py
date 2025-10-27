@@ -99,8 +99,8 @@ class FreMLP(nn.Module):
     def forward(self, x):
         _, _, H, W = x.shape
         x_freq = torch.fft.rfft2(x, norm='backward')
-        mag = torch.abs(x_freq)    # 幅值
-        pha = torch.angle(x_freq)  # 相位
+        mag = torch.abs(x_freq)     
+        pha = torch.angle(x_freq)   
         mag = mag + self.process_mag(mag)
         pha = pha + self.process_pha(pha)
         real = mag * torch.cos(pha)
@@ -114,10 +114,8 @@ class GFA(nn.Module):
         super().__init__()
         self.height, self.width = height, width
 
-        # 动态计算傅里叶变换后的宽度
         self.fft_width = width // 2 + 1
 
-        # 通道门控 g_c
         self.global_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Sequential(
             nn.Linear(channels, channels // reduction, bias=False),
@@ -126,17 +124,14 @@ class GFA(nn.Module):
             nn.Sigmoid()
         )
 
-        # 空间门控 g_s
         self.spatial_gate = nn.Sequential(
             nn.Conv2d(2, 1, kernel_size=7, padding=3, bias=False),
             nn.Sigmoid()
         )
 
-        # 可学习的频谱掩码（动态调整尺寸）
         self.M_spec = nn.Parameter(torch.randn(1, channels, height, self.fft_width) * 0.01)
         self.sigmoid = nn.Sigmoid()
 
-        # MLP模块
         self.mlp = nn.Sequential(
             nn.Conv2d(channels, expand * channels, kernel_size=1),
             nn.GELU(),
@@ -145,7 +140,7 @@ class GFA(nn.Module):
 
     def forward(self, x):
         B, C, H, W = x.shape
-        x_fft = torch.fft.rfft2(x, norm='backward')  # 输出复数 [B, C, H, W//2+1]
+        x_fft = torch.fft.rfft2(x, norm='backward')   
         mag = torch.abs(x_fft)
         pha = torch.angle(x_fft)
 
@@ -156,7 +151,7 @@ class GFA(nn.Module):
 
         real = mag_enhanced * torch.cos(pha)
         imag = mag_enhanced * torch.sin(pha)
-        x_fft_mod = torch.complex(real, imag)  # 复数频谱
+        x_fft_mod = torch.complex(real, imag)  
 
         x_ifft = torch.fft.irfft2(x_fft_mod, s=(H, W), norm='backward')
         max_pool = torch.max(x, dim=1, keepdim=True)[0]
@@ -399,3 +394,4 @@ if __name__ == '__main__':
     print("-" * 50)
     print('FLOPs = ' + str(flops / 1000 ** 3) + ' G')
     print('Params = ' + str(params / 1000 ** 2) + ' M')
+
