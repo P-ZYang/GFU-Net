@@ -203,23 +203,6 @@ class Ours(nn.Module):
                              stochastic=False, epsilon=0.1, r=1, n=img_size // 4 * img_size // 4, drop_path=0.0,
                              relative_pos=True)
 
-
-        self.rt1 = nn.Sequential(nn.Conv2d(self.in_channels, self.in_channels, kernel_size=1, stride=1),
-                                 nn.BatchNorm2d(self.in_channels),
-                                 nn.ReLU(inplace=True))
-
-        self.rt2 = nn.Sequential(nn.Conv2d(self.in_channels * 2, self.in_channels * 2, kernel_size=1, stride=1),
-                                 nn.BatchNorm2d(self.in_channels * 2),
-                                 nn.ReLU(inplace=True))
-
-        self.rt3 = nn.Sequential(nn.Conv2d(self.in_channels * 4, self.in_channels * 4, kernel_size=1, stride=1),
-                                 nn.BatchNorm2d(self.in_channels * 4),
-                                 nn.ReLU(inplace=True))
-
-        self.rt4 = nn.Sequential(nn.Conv2d(self.in_channels * 8, self.in_channels * 8, kernel_size=1, stride=1),
-                                 nn.BatchNorm2d(self.in_channels * 8),
-                                 nn.ReLU(inplace=True))
-
         self.up_decoder4 = UpBlock_attention(self.in_channels * 16, self.in_channels * 4, nb_Conv=2)
         self.up_decoder3 = UpBlock_attention(self.in_channels * 8, self.in_channels * 2, nb_Conv=2)
         self.up_decoder2 = UpBlock_attention(self.in_channels * 4, self.in_channels, nb_Conv=2)
@@ -320,6 +303,7 @@ if __name__ == '__main__':
     print("-" * 50)
     print('FLOPs = ' + str(flops / 1000 ** 3) + ' G')
     print('Params = ' + str(params / 1000 ** 2) + ' M')
+
 
 
 
