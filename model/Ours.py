@@ -13,6 +13,11 @@ from model.VIG.torch_vertex import Grapher
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
+'''
+   Our complete code will be updated after the paper is accepted.
+   我们的完整代码将在论文被接收后更新。
+'''
+
 def get_CTranS_config():
     config = ml_collections.ConfigDict()
     config.transformer = ml_collections.ConfigDict()
@@ -315,5 +320,6 @@ if __name__ == '__main__':
     print("-" * 50)
     print('FLOPs = ' + str(flops / 1000 ** 3) + ' G')
     print('Params = ' + str(params / 1000 ** 2) + ' M')
+
 
 
