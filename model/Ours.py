@@ -109,84 +109,6 @@ class FreMLP(nn.Module):
         x_out = torch.fft.irfft2(x_out, s=(H, W), norm='backward')
         return x_out
 
-class GFA(nn.Module):
-    def __init__(self, channels, height, width, reduction=16, expand=2):
-        super().__init__()
-        self.height, self.width = height, width
-
-        self.fft_width = width // 2 + 1
-
-        self.global_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Sequential(
-            nn.Linear(channels, channels // reduction, bias=False),
-            nn.ReLU(inplace=True),
-            nn.Linear(channels // reduction, channels, bias=False),
-            nn.Sigmoid()
-        )
-
-        self.spatial_gate = nn.Sequential(
-            nn.Conv2d(2, 1, kernel_size=7, padding=3, bias=False),
-            nn.Sigmoid()
-        )
-
-        self.M_spec = nn.Parameter(torch.randn(1, channels, height, self.fft_width) * 0.01)
-        self.sigmoid = nn.Sigmoid()
-
-        self.mlp = nn.Sequential(
-            nn.Conv2d(channels, expand * channels, kernel_size=1),
-            nn.GELU(),
-            nn.Conv2d(expand * channels, channels, kernel_size=1)
-        )
-
-    def forward(self, x):
-        B, C, H, W = x.shape
-        x_fft = torch.fft.rfft2(x, norm='backward')   
-        mag = torch.abs(x_fft)
-        pha = torch.angle(x_fft)
-
-        g_c = self.fc(self.global_pool(x).view(B, C)).view(B, C, 1, 1)
-        M = self.sigmoid(self.M_spec)
-        M = F.interpolate(M, size=(mag.size(2), mag.size(3)), mode='bilinear', align_corners=True)
-        mag_enhanced = self.mlp(mag) * g_c * M
-
-        real = mag_enhanced * torch.cos(pha)
-        imag = mag_enhanced * torch.sin(pha)
-        x_fft_mod = torch.complex(real, imag)  
-
-        x_ifft = torch.fft.irfft2(x_fft_mod, s=(H, W), norm='backward')
-        max_pool = torch.max(x, dim=1, keepdim=True)[0]
-        avg_pool = torch.mean(x, dim=1, keepdim=True)
-        g_s = self.spatial_gate(torch.cat([max_pool, avg_pool], dim=1))  # [B,1,H,W]
-
-        out = x + x_ifft * g_s
-        return out
-
-class FCFN(nn.Module):
-    def __init__(self, in_features, hidden_features=None, out_features=None, act='relu', drop_path=0.0):
-        super().__init__()
-        self.patch_size = 8
-        self.project_in = nn.Conv2d(in_channels=in_features, out_channels=hidden_features*2, kernel_size=1, stride=1)
-        self.dwconv3x3 = nn.Conv2d(hidden_features, hidden_features, kernel_size=3, stride=1, padding=1, groups=hidden_features)
-        self.dwconv5x5 = nn.Conv2d(hidden_features, hidden_features, kernel_size=5, stride=1, padding=2, groups=hidden_features)
-        self.gfa = GFA(hidden_features, 64, 64)
-        self.gfa = GFA(hidden_features, 64, 64)
-        self.relu3 = nn.ReLU()
-        self.relu5 = nn.ReLU()
-        self.project_out = nn.Conv2d(hidden_features * 2, out_features, kernel_size=1)
-        self.eca = eca_layer_2d(out_features)
-        self.fft1_3 = nn.Parameter(torch.ones((hidden_features, 1, 1, self.patch_size, self.patch_size // 2 + 1)))
-        self.fft1_5 = nn.Parameter(torch.ones((hidden_features, 1, 1, self.patch_size, self.patch_size // 2 + 1)))
-
-    def forward(self, x):
-        x_3, x_5 = self.project_in(x).chunk(2, dim=1)
-        x1_3 = self.dwconv3x3(x_3)
-        x1_5 = self.dwconv5x5(x_5)
-        x1_3 = self.relu3(self.gfa(x1_3))
-        x1_5 = self.relu5(self.gfa(x1_5))
-        x = torch.cat([x1_3, x1_5], dim=1)
-        x = self.project_out(x)
-        return self.eca(x)
-
 class FreCCA(nn.Module):
     def __init__(self, F_g, F_x):
         super().__init__()
@@ -276,7 +198,6 @@ class Ours(nn.Module):
                              stochastic=False, epsilon=0.1, r=1, n=img_size // 4 * img_size // 4, drop_path=0.0,
                              relative_pos=True)
 
-        self.fcfn = FCFN(in_features=config.KV_size, hidden_features=config.KV_size, out_features=config.KV_size, act='relu')
 
         self.rt1 = nn.Sequential(nn.Conv2d(self.in_channels, self.in_channels, kernel_size=1, stride=1),
                                  nn.BatchNorm2d(self.in_channels),
@@ -394,4 +315,5 @@ if __name__ == '__main__':
     print("-" * 50)
     print('FLOPs = ' + str(flops / 1000 ** 3) + ' G')
     print('Params = ' + str(params / 1000 ** 2) + ' M')
+
 
