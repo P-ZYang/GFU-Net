@@ -81,20 +81,6 @@ class Ours(nn.Module):
         # x3 = F.interpolate(x3, size=(h2, w2), mode='bilinear', align_corners=True)
         x4 = F.interpolate( x4, size=(h3, w3), mode='bilinear', align_corners=True)
 
-        embx1 = torch.cat([x1, x2, x3, x4], dim=1)
-
-        embx2 = self.GPHer(embx1)
-
-        # embx3 = self.ffn(embx2)
-
-        embx3 = self.fcfn(embx2)
-
-        f1, f2, f3, f4 = torch.split(embx3, [c1, c2, c3, c4], dim=1)
-
-        f1 = F.interpolate(f1, size=(h1, w1), mode='bilinear', align_corners=True)
-        f2 = F.interpolate(f2, size=(h2, w2), mode='bilinear', align_corners=True)
-        # f3 = F.interpolate(f3, size=(h3, w3), mode='bilinear', align_corners=True)
-        f4 = F.interpolate(f4, size=(h4, w4), mode='bilinear', align_corners=True)
 
         r1 = self.rt1(f1) + org1
         r2 = self.rt2(f2) + org2
@@ -131,6 +117,7 @@ class Ours(nn.Module):
         for i in range(num_blocks - 1):
             layers.append(block(output_channels, output_channels))
         return nn.Sequential(*layers)
+
 
 
 
