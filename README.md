@@ -8,6 +8,8 @@ Correspondence:  SHUO ZHUANG
 
 Hefei University of Technology, Hefei 230601, China  
 
+## Our paper is expected to be submitted to TAES, and the complete code will be available once the paper is officially accepted. In addition, we have applied for related patents.
+
 ## Data Structure
 ```
 ├──./datasets/
